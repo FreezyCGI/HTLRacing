@@ -22,23 +22,27 @@ public class TrackManager : MonoBehaviour
     {
         LapManager.Initialize();
         CarBestLap.instance.Initialize(raceTrackType);
-        LoadHighscores();
     }
 
-    void LoadHighscores()
+    public void LoadHighscores()
     {
         ClearHighscores();
         AllHighscoreKeys allHighscoreKeys = AllHighscoreKeys.GetAllHighscoreKeys();
+
         foreach(string key in allHighscoreKeys.keys)
         {
             Highscore playerHighscore = Highscore.LoadHighscore(key);
 
-            GameObject highScoreGameObject = Instantiate(highScoreContentTemplate);
-            highScoreGameObject.transform.SetParent(highScoreContent.transform);
-            HighscoreUI highscoreUI = highScoreGameObject.GetComponent<HighscoreUI>();
-            highscoreUI.SetHighscore(playerHighscore);
+            if(playerHighscore.time != float.MaxValue && playerHighscore.raceTrackType == raceTrackType)
+            {
+                GameObject highScoreGameObject = Instantiate(highScoreContentTemplate);
+                highScoreGameObject.transform.SetParent(highScoreContent.transform);
+                HighscoreUI highscoreUI = highScoreGameObject.GetComponent<HighscoreUI>();
+                highscoreUI.SetHighscore(playerHighscore);
 
-            highscoreUIList.Add(highScoreGameObject);
+                highscoreUIList.Add(highScoreGameObject);
+                highScoreGameObject.SetActive(true);
+            }
         }
     }
 

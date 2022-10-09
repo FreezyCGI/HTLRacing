@@ -12,6 +12,6 @@ public class HighscoreUI : MonoBehaviour
     public void SetHighscore(Highscore highscore)
     {
         txtName.text = highscore.name;
-        txtTime.text = highscore.time.ToString("0.00");
+        txtTime.text = highscore.time.ToString("0.00") + "s";
     }
 }

@@ -82,6 +82,7 @@ public class MainMenu : MonoBehaviour
 
         DisableAllUI();
         track1UI.SetActive(true);
+        track1Manager.LoadHighscores();
     }
 
     public void GoToTrack2()
@@ -96,6 +97,7 @@ public class MainMenu : MonoBehaviour
 
         DisableAllUI();
         track2UI.SetActive(true);
+        track2Manager.LoadHighscores();
     }
 
     public void GoToMenu()
