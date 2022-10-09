@@ -30,7 +30,7 @@ public class LapManager : MonoBehaviour
                 return;
             }
         }
-        CarBestLap.SetNewBestTimeStatic();
+        CarBestLap.instance.SetNewBestTime();
 
         foreach (Lap lap in laps)
         {

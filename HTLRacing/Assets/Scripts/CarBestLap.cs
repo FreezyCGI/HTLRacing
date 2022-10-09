@@ -6,82 +6,110 @@ using UnityEngine.Networking;
 
 public class CarBestLap : MonoBehaviour
 {
-    private static CarBestLap instance;
+    public static CarBestLap instance;
     public TMP_Text txtBestLap;
     public TMP_Text txtLapTime;
     float lapTime;
 
-    public static Highscore PlayerHighscore = new Highscore();
+    raceTrackType RaceTrackType;
+    Highscore PlayerHighscore;
+
+    public PopUp PopUp;
+
+    public void Initialize(raceTrackType _raceTrackType)
+    {
+        lapTime = 0;
+        RaceTrackType = _raceTrackType;
+        LoadHighscore();
+        if(PlayerHighscore.time == float.MaxValue)
+        {
+            txtBestLap.text = "Best Lap: -";
+        }
+        else
+        {
+            txtBestLap.text = "Best Lap: " + PlayerHighscore.time.ToString("0.00");
+        }    
+    }
 
     private void Start()
     {
-        instance = this;
-        lapTime = 0;
-        StartCoroutine(GetHighscoreCoroutine("localhost:3000/highscore/" + PlayerHighscore.name));       
+        instance = this;         
     }
 
     private void Update()
     {
         lapTime += Time.deltaTime;
         txtLapTime.text = "Lap Time: " + lapTime.ToString("0.00");
-    }
 
-    public static void SetNewBestTimeStatic()
-    {
-        instance.SetNewBestTime();
-    }
-
-    void SetNewBestTime()
-    {
-        if (lapTime < PlayerHighscore.time)
+        if(Input.GetKey(KeyCode.A))
         {
-            PlayerHighscore.time = lapTime;
-            txtBestLap.text = "Best Lap: " + lapTime.ToString("0.00");         
-            StartCoroutine(SetHighscoreCoroutine("localhost:3000/highscore/" + PlayerHighscore.name));
-        }
-        lapTime = 0;
-    }
-
-    // Use with StartCoroutine !
-    public IEnumerator GetHighscoreCoroutine(string uri)
-    {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
-        {
-            // Request and wait for the desired page.
-            yield return webRequest.SendWebRequest();
-
-            if (webRequest.result == UnityWebRequest.Result.Success)
+            if(Input.GetKeyDown(KeyCode.Delete))
             {
-                Highscore highScore = JsonUtility.FromJson<Highscore>(webRequest.downloadHandler.text);
-                txtBestLap.text = "Best Lap: " + highScore.time.ToString("0.00");
-                PlayerHighscore.time = highScore.time;
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+                PopUp.Open("Achtung", "Alle gespeicherten Daten wurden gelöscht. Bitte Spiel neu starten");
             }
         }
     }
 
-    public IEnumerator SetHighscoreCoroutine(string uri)
+    public void SetNewBestTime()
     {
-        string highscoreData = JsonUtility.ToJson(PlayerHighscore);
-        Debug.Log(highscoreData);
-        using (UnityWebRequest webRequest = UnityWebRequest.Put(uri, highscoreData))
+        if (lapTime < PlayerHighscore.time)
         {
-            webRequest.SetRequestHeader("Content-Type", "application/json");
-            webRequest.SetRequestHeader("Accept", "application/json");
-            yield return webRequest.SendWebRequest();
+            PlayerHighscore.time = lapTime;
+            SaveHighscore();
+            txtBestLap.text = "Best Lap: " + lapTime.ToString("0.00");
         }
+        lapTime = 0;
+    }
+
+    void LoadHighscore()
+    {
+        string key = calcPlayerKey(Player.name, RaceTrackType);
+
+        //Create Highscore, if player started the first time
+        if (!PlayerPrefs.HasKey(key))
+        {
+            PlayerHighscore = new Highscore();
+            PlayerHighscore.name = Player.name;
+            PlayerHighscore.raceTrackType = RaceTrackType;
+
+            PlayerPrefs.SetString(key, JsonUtility.ToJson(PlayerHighscore));
+            PlayerPrefs.Save();
+        }
+
+        PlayerHighscore = JsonUtility.FromJson<Highscore>(PlayerPrefs.GetString(key));
+    }
+
+    void SaveHighscore()
+    {
+        string key = calcPlayerKey(Player.name, RaceTrackType);
+
+        PlayerPrefs.SetString(key, JsonUtility.ToJson(PlayerHighscore));
+        PlayerPrefs.Save();
+    }
+
+    string calcPlayerKey(string playerName, raceTrackType raceTrackType)
+    {
+        return raceTrackType.ToString() + playerName;
     }
 }
-
 
 [System.Serializable]
 public class Highscore
 {
-    public string name;
     public float time;
+    public raceTrackType raceTrackType;
+    public string name;
 
     public Highscore()
     {
         time = float.MaxValue;
-        name = "";
+        name = string.Empty;
     }
+}
+
+public enum raceTrackType
+{
+    track1, track2
 }

@@ -25,6 +25,8 @@ public class MainMenu : MonoBehaviour
     public TrackManager track1Manager;
     public TrackManager track2Manager;
 
+    public PopUp PopUp;
+
     float timer = 0;
 
     private void Start()
@@ -52,8 +54,8 @@ public class MainMenu : MonoBehaviour
         {
             GoToMenu();
             timer = 0;
+            Player.name = string.Empty;
         }
-        Debug.Log(timer);
     }
 
     enum animTrigger
@@ -63,12 +65,19 @@ public class MainMenu : MonoBehaviour
 
     public void OnBtnStartClicked()
     {
-        string playerName = inputFieldName.text;
-        CarBestLap.PlayerHighscore.name = playerName;
+        Player.name = inputFieldName.text;
+        Debug.Log("Player Name: " + Player.name);
+        GoToTrack1();
     }
 
     public void GoToTrack1()
     {
+        if(string.IsNullOrWhiteSpace(Player.name))
+        {
+            PopUp.Open("Achtung" ,"Bitte einen Namen eingeben");
+            return;
+        }
+
         anim.SetTrigger(animTrigger.toTrack1.ToString());
 
         DisableAllUI();
@@ -77,6 +86,12 @@ public class MainMenu : MonoBehaviour
 
     public void GoToTrack2()
     {
+        if (string.IsNullOrWhiteSpace(Player.name))
+        {
+            PopUp.Open("Achtung", "Bitte einen Namen eingeben");
+            return;
+        }
+
         anim.SetTrigger(animTrigger.toTrack2.ToString());
 
         DisableAllUI();
