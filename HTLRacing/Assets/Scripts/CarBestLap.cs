@@ -20,7 +20,7 @@ public class CarBestLap : MonoBehaviour
     {
         lapTime = 0;
         RaceTrackType = _raceTrackType;
-        LoadHighscore();
+        PlayerHighscore = Highscore.LoadHighscore(Player.name, RaceTrackType);
         if(PlayerHighscore.time == float.MaxValue)
         {
             txtBestLap.text = "Best Lap: -";
@@ -57,42 +57,13 @@ public class CarBestLap : MonoBehaviour
         if (lapTime < PlayerHighscore.time)
         {
             PlayerHighscore.time = lapTime;
-            SaveHighscore();
+            Highscore.SaveHighscore(PlayerHighscore);
             txtBestLap.text = "Best Lap: " + lapTime.ToString("0.00");
         }
         lapTime = 0;
     }
 
-    void LoadHighscore()
-    {
-        string key = calcPlayerKey(Player.name, RaceTrackType);
 
-        //Create Highscore, if player started the first time
-        if (!PlayerPrefs.HasKey(key))
-        {
-            PlayerHighscore = new Highscore();
-            PlayerHighscore.name = Player.name;
-            PlayerHighscore.raceTrackType = RaceTrackType;
-
-            PlayerPrefs.SetString(key, JsonUtility.ToJson(PlayerHighscore));
-            PlayerPrefs.Save();
-        }
-
-        PlayerHighscore = JsonUtility.FromJson<Highscore>(PlayerPrefs.GetString(key));
-    }
-
-    void SaveHighscore()
-    {
-        string key = calcPlayerKey(Player.name, RaceTrackType);
-
-        PlayerPrefs.SetString(key, JsonUtility.ToJson(PlayerHighscore));
-        PlayerPrefs.Save();
-    }
-
-    string calcPlayerKey(string playerName, raceTrackType raceTrackType)
-    {
-        return raceTrackType.ToString() + playerName;
-    }
 }
 
 [System.Serializable]
@@ -107,6 +78,81 @@ public class Highscore
         time = float.MaxValue;
         name = string.Empty;
     }
+
+    public static Highscore LoadHighscore(string key)
+    {
+        return JsonUtility.FromJson<Highscore>(PlayerPrefs.GetString(key));
+    }
+
+    public static Highscore LoadHighscore(string playerName, raceTrackType raceTrackType)
+    {
+        Highscore playerHighscore;
+        string key = calcPlayerKey(playerName, raceTrackType);
+
+        //Create Highscore, if player started the first time
+        if (!PlayerPrefs.HasKey(key))
+        {
+            playerHighscore = new Highscore();
+            playerHighscore.name = playerName;
+            playerHighscore.raceTrackType = raceTrackType;
+
+            AllHighscoreKeys.AddHighscoreKey(key);
+
+            PlayerPrefs.SetString(key, JsonUtility.ToJson(playerHighscore));
+            PlayerPrefs.Save();
+        }
+
+        return JsonUtility.FromJson<Highscore>(PlayerPrefs.GetString(key));
+    }
+
+
+    public static void SaveHighscore(Highscore playerHighscore)
+    {
+        string key = calcPlayerKey(playerHighscore.name, playerHighscore.raceTrackType);
+
+        PlayerPrefs.SetString(key, JsonUtility.ToJson(playerHighscore));
+        PlayerPrefs.Save();
+    }
+
+    public static string calcPlayerKey(string playerName, raceTrackType raceTrackType)
+    {
+        return raceTrackType.ToString() + playerName;
+    }
+}
+
+[System.Serializable]
+public class AllHighscoreKeys
+{
+    static readonly string keyKey = "allKeys";//yes, i hab des so genannt, mach was dagegen. Kann nix dafür, es is 00:50
+    public List<string> keys;
+
+    public AllHighscoreKeys()
+    {
+        keys = new List<string>();
+    }
+
+    public static void AddHighscoreKey(string key)
+    {
+        AllHighscoreKeys allHighscoreKeys = GetAllHighscoreKeys();
+        allHighscoreKeys.keys.Add(key);
+        PlayerPrefs.SetString(keyKey, JsonUtility.ToJson(allHighscoreKeys));
+        PlayerPrefs.Save();
+    }
+
+    public static AllHighscoreKeys GetAllHighscoreKeys()
+    {
+        AllHighscoreKeys allHighscoreKeys;
+        if (!PlayerPrefs.HasKey(keyKey))
+        {
+            allHighscoreKeys = new AllHighscoreKeys();
+            PlayerPrefs.SetString(keyKey, JsonUtility.ToJson(allHighscoreKeys));
+            PlayerPrefs.Save();
+        }
+
+        allHighscoreKeys = JsonUtility.FromJson<AllHighscoreKeys>(PlayerPrefs.GetString(keyKey));
+        return allHighscoreKeys;
+    }
+
 }
 
 public enum raceTrackType
